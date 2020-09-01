@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Data plane
+
+
+Transform:
+  - sqlserverdevfabric-macro
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Service settings ..."
+        Parameters:
+          - ClusterName
+          - DBInstancesCount
+          - CloudWatchLogGroup
+      -
+        Label:
+          default: "SQL Server configuration ..."
+        Parameters:
+          - ImageUrl
+          - TaskCPU
+          - TaskMemory
+          - MSSQLCOLLATION
+
+
+Parameters:
+
+  ClusterName:
+    Type: String
+    Default: sqlserverdevfabric-cluster
+    Description: >
+      Must match the ECS Cluster created by the Control Plane, were you
+      intend to deploy the services
+
+  DBInstancesCount:
+    Type: Number
+    Description: >
+      How many DB instances with the exact same configuration do you want to deploy?
+    Default: 1
+
+  CloudWatchLogGroup:
+    Type: String
+    Description: >
+      Specify the destination Log Group in CloudWatch
+    Default: /ecs/SQLServerFargate
+
+  ImageUrl:
+    Type: String
+    Description: >
+      SQL Server Docker image to deploy
+    Default: mcr.microsoft.com/mssql/server:2019-CU4-ubuntu-18.04
+
+  TaskCPU:
+    Type: Number
+    Description: >
+      Allocated CPU
+    Default: 4096
+
+  TaskMemory:
+    Type: Number
+    Description: >
+      Allocated RAM memory
+    Default: 10240
+
+  MSSQLCOLLATION:
+    Type: String
+    Default: SQL_Latin1_General_CP1_CI_AS
+    Description: MS SQL Collation setting
+
+
+Resources:
+
+  ServiceStack:
+    Type: AWS::CloudFormation::Stack
+    Count: !Ref DBInstancesCount
+    Properties:
+      TemplateURL: fargate-sql-service/fargate-sql-service.yaml
+      Parameters:
+        ClusterName: !Ref ClusterName
+        TheVPCID:
+          Fn::ImportValue:
+            !Sub '${ClusterName}::TheVPCID'
+        DefaultAccessCIDR:
+          Fn::ImportValue:
+            !Sub '${ClusterName}::TheVPCCIDR'
+        SubnetsPrivate:
+          Fn::ImportValue:
+            !Sub '${ClusterName}::SubnetsPrivate'
+        SRVPrefix: db-%s
+        ServiceDiscoveryNamespace:
+          Fn::ImportValue:
+            !Sub '${ClusterName}::ServiceDiscoveryNamespace'
+        EFSID:
+          Fn::ImportValue:
+            !Sub '${ClusterName}::EFS'
+        CloudWatchLogGroup: !Ref CloudWatchLogGroup
+        ImageUrl: !Ref ImageUrl
+        ContainerPort: 1433
+        TaskCPU: !Ref TaskCPU
+        TaskMemory: !Ref TaskMemory
+        MSSQLCOLLATION: !Ref MSSQLCOLLATION
