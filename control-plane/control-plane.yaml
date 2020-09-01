@@ -1,0 +1,301 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Control plane infrastructure for the SQL server fabric solution.
+  The selected subnets must be in different Avaiability Zones.
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Service settings ..."
+        Parameters:
+          - ClusterName
+          - RootDNSName
+          - LambdaRuntime
+      -
+        Label:
+          default: "Networking settings ..."
+        Parameters:
+          - TheVPCID
+          - TheSubnets
+          - SelectedPrivateSubnetsCont
+
+      -
+        Label:
+          default: "Storage Manager settings ..."
+        Parameters:
+          - StorageManagerDockerImage
+
+
+Parameters:
+
+  ClusterName:
+    Type: String
+    Description: >
+      Main ECS cluster for hosting all the database containers and instances.
+    Default: sqlserverdevfabric-cluster
+
+  LambdaRuntime:
+    Type: String
+    Description: >
+      Execution runtime for custom and backend resources
+    Default: python3.7
+
+  RootDNSName:
+    Type: String
+    Description: >
+      Private DNS root domain name for the service
+    Default: sqlserverdev.fabric
+
+  TheVPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: >
+      The VPC where the solution will be hosted
+
+  TheSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >
+      The Subnets where the solution will be hosted (must be private and located in different Availability Zones)
+
+  SelectedPrivateSubnetsCont:
+    Type: Number
+    Description: >
+      How many subnets would you like to utilize
+    AllowedValues:
+      - 1
+      - 2
+      - 3
+      - 4
+
+  StorageManagerDockerImage:
+    Type: String
+    Default: coderaiser/cloudcmd:14.3.10-alpine
+    Description: The url of a docker image
+
+
+Conditions:
+
+  CreateMountTarget0:  !Or
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 1]
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 2]
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 3]
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 4]
+
+  CreateMountTarget1:  !Or
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 2]
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 3]
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 4]
+
+  CreateMountTarget2:  !Or
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 3]
+    - !Equals [!Ref SelectedPrivateSubnetsCont, 4]
+
+  CreateMountTarget3: !Equals [!Ref SelectedPrivateSubnetsCont, 4]
+
+
+Resources:
+
+  SubnetChecker:
+    Type: Custom::SubnetChecker
+    Properties:
+      ServiceToken: !GetAtt CustomResourcesStack.Outputs.SubnetChecker
+      Subnets: !Ref TheSubnets
+      Vpc: !Ref TheVPCID
+      Input: !Ref SelectedPrivateSubnetsCont
+
+  ServiceDiscoveryNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    DependsOn: [ SubnetChecker ]
+    Properties:
+      Name: !Ref RootDNSName
+      Vpc: !Ref TheVPCID
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    DependsOn: [ SubnetChecker ]
+    Properties:
+      ClusterName: !Ref ClusterName
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  TransformStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: [ SubnetChecker ]
+    Properties:
+      TemplateURL: macro-transformer/macro-transformer.yaml
+      Parameters:
+        LambdaRuntime: !Ref LambdaRuntime
+
+  StorageManagerStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: storage-manager/storage-manager.yaml
+      Parameters:
+        ClusterName: !Ref ECSCluster
+        TheVPCID: !Ref TheVPCID
+        DefaultAccessCIDR: !GetAtt SubnetChecker.vpc_cidr
+        SubnetsPrivate: !Join
+          - ','
+          - !Ref TheSubnets
+        SRVPrefix: StorageManager
+        ServiceDiscoveryNamespace: !Ref ServiceDiscoveryNamespace
+        EFSID: !Ref EFS
+        ImageUrl: !Ref StorageManagerDockerImage
+
+  CustomResourcesStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: custom-resources/custom-resources.yaml
+      Parameters:
+        LambdaRuntime: !Ref LambdaRuntime
+
+  EFS:
+    Type: AWS::EFS::FileSystem
+    DependsOn: [ SubnetChecker ]
+    Properties:
+      Encrypted: True
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+
+  EFSMountTargetAZ0:
+    Type: AWS::EFS::MountTarget
+    Condition: CreateMountTarget0
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !Ref SecurityGroupEFS
+      SubnetId: !Select [ 0, !Ref TheSubnets ]
+
+  EFSMountTargetAZ1:
+    Type: AWS::EFS::MountTarget
+    Condition: CreateMountTarget1
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !Ref SecurityGroupEFS
+      SubnetId: !Select [ 1, !Ref TheSubnets ]
+
+  EFSMountTargetAZ2:
+    Type: AWS::EFS::MountTarget
+    Condition: CreateMountTarget2
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !Ref SecurityGroupEFS
+      SubnetId: !Select [ 2, !Ref TheSubnets ]
+
+  EFSMountTargetAZ3:
+    Type: AWS::EFS::MountTarget
+    Condition: CreateMountTarget3
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !Ref SecurityGroupEFS
+      SubnetId: !Select [ 3, !Ref TheSubnets ]
+
+  SecurityGroupEFS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${ClusterName}-EFS-SecurityGroup
+      GroupDescription: !Sub 'Allowed ports for ${ClusterName} EFS volume.'
+      VpcId: !Ref TheVPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          CidrIp: !GetAtt SubnetChecker.vpc_cidr
+
+  FileSystemBackupVault:
+    Type: AWS::Backup::BackupVault
+    DeletionPolicy: Retain
+    Properties:
+      BackupVaultName: !Sub efs-${EFS}-backup
+      AccessPolicy: |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "backup:DeleteBackupVault",
+              "Resource": "*"
+            }
+          ]
+        }
+
+  FileSystemBackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan:
+        BackupPlanName: !Sub ${EFS}-Daily-Weekly-Monthly
+        BackupPlanRule:
+          - RuleName: DailyBackups
+            TargetBackupVault: !Ref FileSystemBackupVault
+            ScheduleExpression: "cron(0 5 ? * * *)"
+            StartWindowMinutes: 480
+            CompletionWindowMinutes: 10080
+            Lifecycle:
+              DeleteAfterDays: 35
+          - RuleName: WeeklyBackups
+            TargetBackupVault: !Ref FileSystemBackupVault
+            ScheduleExpression: "cron(0 5 ? * 7 *)"
+            StartWindowMinutes: 480
+            CompletionWindowMinutes: 10080
+            Lifecycle:
+              DeleteAfterDays: 90
+          - RuleName: MonthlyBackups
+            TargetBackupVault: !Ref FileSystemBackupVault
+            ScheduleExpression: "cron(0 5 1 * ? *)"
+            StartWindowMinutes: 480
+            CompletionWindowMinutes: 10080
+            Lifecycle:
+              MoveToColdStorageAfterDays: 90
+              DeleteAfterDays: 365
+
+  FileSystemBackupSelection:
+    Type: AWS::Backup::BackupSelection
+    Properties:
+      BackupPlanId: !Ref FileSystemBackupPlan
+      BackupSelection:
+        IamRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/AWSBackupDefaultServiceRole
+        Resources:
+          - !Sub arn:aws:elasticfilesystem:${AWS::Region}:${AWS::AccountId}:file-system/${EFS}
+        SelectionName: !Sub efs-${EFS}-backup
+
+
+Outputs:
+
+  ServiceDiscoveryNamespace:
+    Description: 'DNS Namespace.'
+    Value: !Ref ServiceDiscoveryNamespace
+    Export:
+      Name: !Sub ${ClusterName}::ServiceDiscoveryNamespace
+
+  EFS:
+    Description: 'EFS ID.'
+    Value: !Ref EFS
+    Export:
+      Name: !Sub ${ClusterName}::EFS
+
+  TheVPCID:
+    Description: 'VPC used for control plane.'
+    Value: !Ref TheVPCID
+    Export:
+      Name: !Sub ${ClusterName}::TheVPCID
+
+  TheVPCCIDR:
+    Description: 'VPC CIDR.'
+    Value: !GetAtt SubnetChecker.vpc_cidr
+    Export:
+      Name: !Sub ${ClusterName}::TheVPCCIDR
+
+  SubnetsPrivate:
+    Description: 'Private Subnets used for control plane and the services.'
+    Value: !Join
+      - ','
+      - !Ref TheSubnets
+    Export:
+      Name: !Sub ${ClusterName}::SubnetsPrivate

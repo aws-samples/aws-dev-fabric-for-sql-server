@@ -1,0 +1,279 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Storage Manager service - full admin acess to 'EFS'
+
+
+Parameters:
+
+  ClusterName:
+    Type: String
+    Default: Testing
+    Description: Existing ECS cluster
+
+  TheVPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC
+
+  SubnetsPrivate:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: The Subnets
+
+  EFSID:
+    Type: String
+    Description: EFS ID
+
+  SRVPrefix:
+    Type: String
+    Default: StorageManager
+    Description: Storage Manager prefix
+
+  ServiceDiscoveryNamespace:
+    Type: String
+    Description: Private service discovery namespace
+
+  PlatformVersion:
+    Type: String
+    Default: 1.4.0
+    Description: Fargate platform version
+
+  CloudWatchLogGroup:
+    Type: String
+    Default: /ecs/StorageManager
+    Description: Specify the destination log group in CloudWatch
+
+  ImageUrl:
+    Type: String
+    Default: coderaiser/cloudcmd:14.3.10-alpine
+    Description: The url of a docker image
+
+  ContainerPort:
+    Type: Number
+    Default: 80
+    Description: What port number the application inside the docker container is binding to
+
+  TaskCPU:
+    Type: Number
+    Default: 512
+    Description: CPU shares
+
+  TaskMemory:
+    Type: Number
+    Default: 1024
+    Description: Memory hard limit
+
+  DesiredCount:
+    Type: Number
+    Default: 1
+    Description: How many copies of the service task to run
+
+  DefaultAccessCIDR:
+    Type: String
+    Default: '0.0.0.0/0'
+    Description: Default access rule for the services
+
+
+Resources:
+
+  ###
+  ## ECS Task definition
+  #
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${SRVPrefix}-service
+      Cpu: !Ref TaskCPU
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      RequiresCompatibilities:
+        - FARGATE
+      Volumes:
+        - Name: EFS_ROOT
+          EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: !Ref ROOTAcessPoint
+              IAM: DISABLED
+            FilesystemId: !Ref EFSID
+            TransitEncryption: ENABLED
+      ContainerDefinitions:
+        # Storage Manager
+        - Name: !Sub ${SRVPrefix}-StorageManager
+          Essential: true
+          Image: !Ref ImageUrl
+          Command:
+            - '--no-keys-panel'
+            - '--one-file-panel'
+            - '--port=80'
+            - '--root=/backup'
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+          Environment:
+            - Name: CLOUDCMD_AUTH
+              Value: 'true'
+            - Name: CLOUDCMD_USERNAME
+              Value: administrator
+            - Name: CLOUDCMD_NAME
+              Value: !Sub ${SRVPrefix} - Admin Storage Manager
+          Secrets:
+            - Name: CLOUDCMD_PASSWORD
+              ValueFrom: !Ref StorageManagerAdministratorPassword
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-create-group: 'true'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Sub ${SRVPrefix}-StorageManager
+          MountPoints:
+            - ContainerPath: /backup
+              ReadOnly: false
+              SourceVolume: EFS_ROOT
+
+  ###
+  ## EFS root Access point
+  #
+  ROOTAcessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: !Ref EFSID
+      PosixUser:
+        Gid: '7000'
+        Uid: '7000'
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: '7000'
+          OwnerUid: '7000'
+          Permissions: '750'
+        Path: '/'
+
+  ###
+  ## ECS Service specification
+  #
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub ${SRVPrefix}-service
+      Cluster: !Ref ClusterName
+      LaunchType: FARGATE
+      PlatformVersion: !Ref PlatformVersion
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DesiredCount: !Ref 'DesiredCount'
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: [!Ref SecurityGroup]
+          Subnets: !Ref SubnetsPrivate
+      TaskDefinition: !Ref TaskDefinition
+      ServiceRegistries:
+        - RegistryArn: !GetAtt DiscoveryService.Arn
+
+  ###
+  ## Security group for controlling access to the service
+  #
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${SRVPrefix}-SecurityGroup
+      GroupDescription: !Sub 'Allowed ports for ${SRVPrefix} ECS service.'
+      VpcId: !Ref TheVPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          CidrIp: !Ref DefaultAccessCIDR
+
+  ###
+  ## Secrets configuration
+  #
+  StorageManagerAdministratorPassword:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${SRVPrefix}-StorageManager
+      Description: !Sub 'This is the password for the root Administrator web user in ${SRVPrefix}-service.'
+      GenerateSecretString:
+        PasswordLength: 16
+        ExcludeLowercase: false
+        ExcludeNumbers: false
+        ExcludePunctuation: true
+        ExcludeUppercase: false
+        IncludeSpace: false
+        RequireEachIncludedType: true
+        ExcludeCharacters: '"@/\'
+
+  ###
+  ## Task Execution role ARN
+  #
+  TaskExecutionRole:
+     Type: AWS::IAM::Role
+     Properties:
+       RoleName: !Sub ${SRVPrefix}-TaskExecutionRole
+       AssumeRolePolicyDocument:
+         Statement:
+         - Action:
+           - sts:AssumeRole
+           Effect: Allow
+           Principal:
+             Service:
+             - ecs-tasks.amazonaws.com
+         Version: '2012-10-17'
+       Path: "/"
+       Policies:
+       - PolicyDocument:
+           Statement:
+           - Action:
+             - logs:CreateLogGroup
+             - logs:CreateLogStream
+             - logs:PutLogEvents
+             Effect: Allow
+             Resource:
+               - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CloudWatchLogGroup}:*
+               - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CloudWatchLogGroup}
+           Version: '2012-10-17'
+         PolicyName: !Sub ${SRVPrefix}-CW-Policy
+       - PolicyDocument:
+           Statement:
+           - Action:
+             - kms:Decrypt
+             - secretsmanager:GetSecretValue
+             Effect: Allow
+             Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SRVPrefix}-*
+           Version: '2012-10-17'
+         PolicyName: !Sub ${SRVPrefix}-Secrets-Policy
+
+  ###
+  ## Task role ARN
+  #
+  TaskRole:
+     Type: AWS::IAM::Role
+     Properties:
+       RoleName: !Sub ${SRVPrefix}-TaskRole
+       AssumeRolePolicyDocument:
+         Statement:
+         - Action:
+           - sts:AssumeRole
+           Effect: Allow
+           Principal:
+             Service:
+             - ecs-tasks.amazonaws.com
+         Version: '2012-10-17'
+       Path: "/"
+
+  ###
+  ## Service discovery settings
+  #
+  DiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Description: Discovery Service for the SQL container
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - TTL: 60
+            Type: A
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: !Sub ${SRVPrefix}
+      NamespaceId: !Ref ServiceDiscoveryNamespace
