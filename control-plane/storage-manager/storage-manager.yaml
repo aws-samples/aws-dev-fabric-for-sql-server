@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Storage Manager service - full admin acess to 'EFS'
+Description: Storage Manager service - full admin access to 'EFS'
 
 
 Parameters:

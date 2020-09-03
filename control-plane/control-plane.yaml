@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >
-  Control plane infrastructure for the SQL server fabric solution.
-  The selected subnets must be in different Avaiability Zones.
+  Control plane infrastructure for the Dev Fabric for SQL Server solution.
 
 
 Metadata:
@@ -62,7 +61,8 @@ Parameters:
   SelectedPrivateSubnetsCont:
     Type: Number
     Description: >
-      How many subnets would you like to utilize
+      How many subnets you would like to utilise. This parameter must
+      match the number of subnets selected above.
     AllowedValues:
       - 1
       - 2

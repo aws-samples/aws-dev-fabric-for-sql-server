@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
 Description: >
-  This tempalte creates the required custom resources.
+  This template creates the required custom resources.
 
 
 Parameters:
@@ -132,7 +132,7 @@ Resources:
 
                     print("CIDR is: %s" % response_data['vpc_cidr'])
 
-                print("Execution succesfull!")
+                print("Execution successful!")
                 cfnresponse.send(event,
                                  context,
                                  cfnresponse.SUCCESS,
