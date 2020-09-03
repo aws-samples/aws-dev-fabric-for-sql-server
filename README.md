@@ -2,7 +2,7 @@
 
 ### How to deploy
 
-- Locate an S3 bucket, where CloudFormation artefacts will be stored. This Bucket must be in the same region were you will deploy the stack. Export the variables for sooth usage:
+- Locate an S3 bucket, where CloudFormation templates will be stored. This Bucket must be in the same region were you will deploy the stack. Export the variables for smooth usage:
 
 ```
 export the_region=<your-aws-region>
@@ -18,7 +18,7 @@ git clone https://github.com/aws-samples/aws-dev-fabric-for-sql-server.git
 - Step into the repository folder
 
 ```
-cd aws-dev-fabric-for-sql-server.git
+cd aws-dev-fabric-for-sql-server
 ```
 
 ##### Control plane
@@ -30,7 +30,7 @@ aws --region=$the_region cloudformation package --template-file ./control-plane/
 
 - Deploy ...
 
-You can use the AWS Web console to deploy! Upload the **packaged-control-plane.yaml** file. Alternatively, you can deploy via CLI as well.
+You can use the AWS Web console to deploy! Upload the **packaged-control-plane.yaml** file. Alternatively, you can deploy via CLI as well:
 ```
 aws --region=$the_region cloudformation create-stack \
        --template-body file://packaged-control-plane.yaml \
@@ -53,7 +53,7 @@ aws --region=$the_region cloudformation package --template-file ./data-plane/dat
 
 - Deploy ...
 
-You can use the AWS Web console to deploy! Upload the **packaged-data-plane.yaml** file.Alternatively, you can deploy via CLI as well.
+You can use the AWS Web console to deploy! Upload the **packaged-data-plane.yaml** file.Alternatively, you can deploy via CLI as well:
 
 ```
 aws --region=$the_region cloudformation create-stack \
