@@ -18,6 +18,8 @@ If you think you’ve found a potential security issue, please do not post it in
 
 The solution deployment is fully automated in [CloudFormation](https://aws.amazon.com/cloudformation/). Before deploying, you will need to **pack** the templates, a process that will [upload local artifacts to an S3 bucket](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-package.html). This will consolidate the project templates for seamlessly deploying the solution.
 
+Regarding the parameters, you will find self explanatory comments and parameter names while deploying the solution through the AWS Web Console.
+
 ### Step by step
 
 1. Locate an S3 bucket, where CloudFormation templates will be stored. This Bucket **must** be in the same region were you will deploy the solution. If using Linux or MacOS, you can export the variables for smooth usage:
