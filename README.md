@@ -18,7 +18,7 @@ If you think you’ve found a potential security issue, please do not post it in
 
 The solution deployment is fully automated in [CloudFormation](https://aws.amazon.com/cloudformation/). Before deploying, you will need to **pack** the templates, a process that will [upload local artifacts to an S3 bucket](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-package.html). This will consolidate the project templates for seamlessly deploying the solution.
 
-#### Step by step
+### Step by step
 
 1. Locate an S3 bucket, where CloudFormation templates will be stored. This Bucket **must** be in the same region were you will deploy the solution. If using Linux or MacOS, you can export the variables for smooth usage:
 
@@ -41,7 +41,7 @@ git clone https://github.com/aws-samples/aws-dev-fabric-for-sql-server.git
 cd aws-dev-fabric-for-sql-server
 ```
 
-##### Control plane
+#### Control plane
 
 - **Package ...**
 ```
@@ -64,7 +64,7 @@ aws --region=$the_region cloudformation create-stack \
        ParameterKey=SubnetPrivateAZ2,ParameterValue="<subnet-prviate-2>"
 ```
 
-##### Data plane
+#### Data plane
 
 - Package ...
 ```
