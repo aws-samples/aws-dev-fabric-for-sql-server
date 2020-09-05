@@ -5,10 +5,34 @@ Description: >
 
 Metadata:
   AWS::CloudFormation::Interface:
+
+    ParameterLabels:
+
+      TheVPCID:
+        default: "The VPC"
+
+      TheSubnets:
+        default: "The subnets"
+
+      SelectedPrivateSubnetsCont:
+        default: "Subnets count"
+
+      ClusterName:
+        default: "ECS Cluster name"
+
+      RootDNSName:
+        default: "Root DNS name"
+
+      LambdaRuntime:
+        default: "Lambda Runtime"
+
+      StorageManagerDockerImage:
+        default: "Storage Manager image"
+
     ParameterGroups:
       -
         Label:
-          default: "Service settings ..."
+          default: "Deployment settings ..."
         Parameters:
           - ClusterName
           - RootDNSName
@@ -33,7 +57,7 @@ Parameters:
   ClusterName:
     Type: String
     Description: >
-      Main ECS cluster for hosting all the database containers and instances.
+      Main ECS cluster for hosting all the database containers and instances
     Default: sqlserverdevfabric-cluster
 
   LambdaRuntime:
@@ -51,7 +75,7 @@ Parameters:
   TheVPCID:
     Type: AWS::EC2::VPC::Id
     Description: >
-      The VPC where the solution will be hosted
+      VPC where the solution is going to be deployed
 
   TheSubnets:
     Type: List<AWS::EC2::Subnet::Id>
@@ -62,7 +86,7 @@ Parameters:
     Type: Number
     Description: >
       How many subnets you would like to utilise. This parameter must
-      match the number of subnets selected above.
+      match the number of subnets selected above
     AllowedValues:
       - 1
       - 2
