@@ -60,7 +60,6 @@ aws --region=$the_region cloudformation create-stack \
        --disable-rollback \
        --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM \
        --parameters \
-       ParameterKey=ClusterName,ParameterValue="<cluster-name>" \
        ParameterKey=TheVPCID,ParameterValue="<the-vpc>" \
        ParameterKey=SubnetPrivateAZ1,ParameterValue="<subnet-prviate-1>" \
        ParameterKey=SubnetPrivateAZ2,ParameterValue="<subnet-prviate-2>"
@@ -82,9 +81,7 @@ aws --region=$the_region cloudformation create-stack \
        --template-body file://packaged-data-plane.yaml \
        --stack-name <the-stack-name> \
        --disable-rollback \
-       --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM \
-       --parameters \
-       ParameterKey=ClusterName,ParameterValue="<cluster-name>"
+       --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
 ```
 
 

@@ -59,6 +59,8 @@ Parameters:
     Description: >
       Main ECS cluster for hosting all the database containers and instances
     Default: sqlserverdevfabric-cluster
+    AllowedValues:
+      - sqlserverdevfabric-cluster
 
   LambdaRuntime:
     Type: String
@@ -140,10 +142,31 @@ Resources:
     Type: AWS::ECS::Cluster
     DependsOn: [ SubnetChecker ]
     Properties:
-      ClusterName: !Ref ClusterName
+      ClusterName: !Sub ${ClusterName}
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
+      CapacityProviders:
+        - FARGATE
+      DefaultCapacityProviderStrategy:
+        - Base: 0
+          CapacityProvider: FARGATE
+          Weight: 1
+
+  ECSClusterSpot:
+    Type: AWS::ECS::Cluster
+    DependsOn: [ SubnetChecker ]
+    Properties:
+      ClusterName: !Sub ${ClusterName}-spot
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      CapacityProviders:
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - Base: 0
+          CapacityProvider: FARGATE_SPOT
+          Weight: 1
 
   TransformStack:
     Type: AWS::CloudFormation::Stack
@@ -323,3 +346,15 @@ Outputs:
       - !Ref TheSubnets
     Export:
       Name: !Sub ${ClusterName}::SubnetsPrivate
+
+  TheECSCluster:
+    Description: 'ECS Cluster name.'
+    Value: !Ref ECSCluster
+    Export:
+      Name: !Sub ${ClusterName}::TheECSCluster
+
+  TheECSClusterSpot:
+    Description: 'ECS Spot Cluster name.'
+    Value: !Ref ECSClusterSpot
+    Export:
+      Name: !Sub ${ClusterName}::TheECSClusterSpot

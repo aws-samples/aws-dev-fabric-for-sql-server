@@ -29,6 +29,9 @@ Metadata:
       TaskMemory:
         default: "Server RAM Memory (MB)"
 
+      UseSpot:
+        default: "Enable Fargate Spot for this setup"
+
       MSSQLCOLLATION:
         default: "Collation and Unicode support"
 
@@ -47,7 +50,13 @@ Metadata:
           - ImageUrl
           - TaskCPU
           - TaskMemory
+          - UseSpot
           - MSSQLCOLLATION
+
+
+Conditions:
+
+  EnableSpot: !Equals [!Ref UseSpot, 'true']
 
 
 Parameters:
@@ -58,6 +67,8 @@ Parameters:
     Description: >
       Must match the ECS Cluster created by the Control Plane, were you
       intend to deploy the SQL Instances
+    AllowedValues:
+      - sqlserverdevfabric-cluster
 
   DBInstancesCount:
     Type: Number
@@ -113,6 +124,15 @@ Parameters:
       - 19456
       - 20480
 
+  UseSpot:
+    Type: String
+    Description: >
+      Choose if you want to use Fargate Spot technology
+    Default: No
+    AllowedValues:
+      - Yes
+      - No
+
   MSSQLCOLLATION:
     Type: String
     Default: SQL_Latin1_General_CP1_CI_AS
@@ -127,7 +147,10 @@ Resources:
     Properties:
       TemplateURL: fargate-sql-service/fargate-sql-service.yaml
       Parameters:
-        ClusterName: !Ref ClusterName
+        ClusterName: !If
+          - EnableSpot
+          - Fn::ImportValue: !Sub '${ClusterName}::TheECSClusterSpot'
+          - Fn::ImportValue: !Sub '${ClusterName}::TheECSCluster'
         TheVPCID:
           Fn::ImportValue:
             !Sub '${ClusterName}::TheVPCID'
