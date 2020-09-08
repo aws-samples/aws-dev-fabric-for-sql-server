@@ -126,4 +126,4 @@ Amazon Web Services does not currently provide support for modified copies of th
 
 ## License
 
-The AWS Dev fabric for SQL Server solution is distributed under the [MIT-0 License](https://github.com/aws/mit-0). See [LICENSE](https://github.com/aws-samples/aws-dev-fabric-for-sql-server/blob/master/LICENSE) for more information.
+The Dev fabric for SQL Server solution is distributed under the [MIT-0 License](https://github.com/aws/mit-0). See [LICENSE](https://github.com/aws-samples/aws-dev-fabric-for-sql-server/blob/master/LICENSE) for more information.
