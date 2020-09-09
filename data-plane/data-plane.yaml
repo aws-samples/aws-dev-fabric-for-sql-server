@@ -8,6 +8,33 @@ Transform:
 
 Metadata:
   AWS::CloudFormation::Interface:
+
+    ParameterLabels:
+
+      ClusterName:
+        default: "ECS Cluster name"
+
+      DBInstancesCount:
+        default: "SQL Instance count"
+
+      CloudWatchLogGroup:
+        default: "Cloud Watch Log Group name"
+
+      ImageUrl:
+        default: "SQL Server docker image"
+
+      TaskCPU:
+        default: "Server CPU shares"
+
+      TaskMemory:
+        default: "Server RAM Memory (MB)"
+
+      UseSpot:
+        default: "Enable Fargate Spot for this setup"
+
+      MSSQLCOLLATION:
+        default: "Collation and Unicode support"
+
     ParameterGroups:
       -
         Label:
@@ -23,7 +50,13 @@ Metadata:
           - ImageUrl
           - TaskCPU
           - TaskMemory
+          - UseSpot
           - MSSQLCOLLATION
+
+
+Conditions:
+
+  EnableSpot: !Equals [!Ref UseSpot, 'true']
 
 
 Parameters:
@@ -33,7 +66,9 @@ Parameters:
     Default: sqlserverdevfabric-cluster
     Description: >
       Must match the ECS Cluster created by the Control Plane, were you
-      intend to deploy the services
+      intend to deploy the SQL Instances
+    AllowedValues:
+      - sqlserverdevfabric-cluster
 
   DBInstancesCount:
     Type: Number
@@ -56,19 +91,52 @@ Parameters:
   TaskCPU:
     Type: Number
     Description: >
-      Allocated CPU
-    Default: 4096
+      Allocated CPU shares for the container that will run the database engine. Please consider the following supported combinations: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+    Default: 2048
+    AllowedValues:
+      - 1024
+      - 2048
+      - 4096
 
   TaskMemory:
     Type: Number
     Description: >
-      Allocated RAM memory
-    Default: 10240
+      Allocated RAM memory for the container that will run the database engine. Please consider the following supported combinations: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+    Default: 8192
+    AllowedValues:
+      - 2048
+      - 3072
+      - 4096
+      - 5120
+      - 6144
+      - 7168
+      - 8192
+      - 9216
+      - 10240
+      - 11264
+      - 12288
+      - 13312
+      - 14336
+      - 15360
+      - 16384
+      - 17408
+      - 18432
+      - 19456
+      - 20480
+
+  UseSpot:
+    Type: String
+    Description: >
+      Choose if you want to use Fargate Spot technology
+    Default: No
+    AllowedValues:
+      - Yes
+      - No
 
   MSSQLCOLLATION:
     Type: String
     Default: SQL_Latin1_General_CP1_CI_AS
-    Description: MS SQL Collation setting
+    Description: SQL Server collation setting
 
 
 Resources:
@@ -79,7 +147,10 @@ Resources:
     Properties:
       TemplateURL: fargate-sql-service/fargate-sql-service.yaml
       Parameters:
-        ClusterName: !Ref ClusterName
+        ClusterName: !If
+          - EnableSpot
+          - Fn::ImportValue: !Sub '${ClusterName}::TheECSClusterSpot'
+          - Fn::ImportValue: !Sub '${ClusterName}::TheECSCluster'
         TheVPCID:
           Fn::ImportValue:
             !Sub '${ClusterName}::TheVPCID'

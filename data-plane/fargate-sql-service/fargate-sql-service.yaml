@@ -218,7 +218,6 @@ Resources:
     Properties:
       ServiceName: !Sub ${SRVPrefix}-service
       Cluster: !Ref ClusterName
-      LaunchType: FARGATE
       PlatformVersion: !Ref PlatformVersion
       DeploymentConfiguration:
         MaximumPercent: 200

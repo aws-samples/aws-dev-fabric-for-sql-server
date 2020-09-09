@@ -1,6 +1,7 @@
 ---
 name: "\U0001F4A1 Feature request"
 about: Request a new feature
+title: '[Feature Request] '
 labels: feature-request
 ---
 <!-- short description of the feature you are proposing: -->
