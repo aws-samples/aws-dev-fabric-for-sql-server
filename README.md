@@ -1,6 +1,6 @@
 # AWS Dev fabric for SQL Server
 
-The AWS Dev fabric for SQL Server is a solution that helps customers significantly reduce Amazon EC2 heavy lifting on Development Environments, allowing customers to quickly scale to hundreds of thousands of SQL Server Instances in minutes as well as reducing EC2 Windows License include costs or MSDN licensing.
+The AWS Dev fabric for SQL Server is a solution that helps customers significantly reduce Amazon EC2 heavy lifting on Development Environments, allowing customers to quickly scale to hundreds of thousands of SQL Server Instances in minutes as well as reducing EC2 Windows License and MSDN licensing costs.
 
 - [How to deploy the solution](#how-to-deploy-the-solution)
   - [Control plane](#control-plane)
