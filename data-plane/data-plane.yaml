@@ -102,7 +102,7 @@ Parameters:
     Type: Number
     Description: >
       Allocated RAM memory for the container that will run the database engine. Please consider the following supported combinations: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
-    Default: 8192
+    Default: 16384
     AllowedValues:
       - 2048
       - 3072
@@ -123,6 +123,16 @@ Parameters:
       - 18432
       - 19456
       - 20480
+      - 21504
+      - 22528
+      - 23552
+      - 24576
+      - 25600
+      - 26624
+      - 27648
+      - 28672
+      - 29696
+      - 30720
 
   UseSpot:
     Type: String
