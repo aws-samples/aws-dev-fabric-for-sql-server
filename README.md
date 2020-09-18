@@ -1,8 +1,10 @@
 # AWS Dev fabric for SQL Server
 
-The AWS Dev fabric for SQL Server is an opensource solution that helps customers significantly reduce Amazon EC2 heavy lifting on Development Environments, allowing customers to quickly scale to hundreds of thousands of SQL Server Developer Edition Instances in minutes as well as reducing EC2 Windows License and MSDN subscriptions costs.
+The AWS Dev Fabric for SQL Server is an opensource solution created by Solution Architects and Support Engineers to help customers reduce the Amazon EC2 Windows footprint on development environments.
 
-As you may know, Microsoft changed their license terms on October 1, 2019 blocking customers to BYOL their MSDN license to AWS. Dev Fabric for SQL Server allows customers to run SQL Server Developer Edition on top of Linux Containers powered by AWS Fargate, helping customers still running their SQL Server for developer propose as well as to reduce the Amazon EC2 footprint.
+The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, CloudWatch, EFS, Lambda, and AWS Backup, offering a serverless solution to run SQL Server Developer edition into containers, at the same time, automatically taking care of data persistence, monitoring, backup, and auto-recovery.
+
+As you may know, Microsoft changed their license terms on October 1, 2019, blocking customers the ability to BYOL their MSDN license to AWS, forcing them to use Microsoft Azure instead. The AWS Dev Fabric for SQL Server allows customers to keep their SQL Server on development environment running on AWS, while releasing customers from MSDN subscriptions to run Windows and SQL Server on Amazon EC2 Dedicated Instances.
 
 - [How to deploy the solution](#how-to-deploy-the-solution)
   - [Control plane](#control-plane)
