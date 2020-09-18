@@ -4,7 +4,7 @@ The AWS Dev Fabric for SQL Server is an open-source solution created by Solution
 
 As you may know, Microsoft changed their license terms on October 1, 2019, blocking customers the ability to BYOL their MSDN license to AWS, forcing them to use Microsoft Azure instead. The AWS Dev Fabric for SQL Server allows customers to keep their SQL Server on development environment running on AWS, while releasing customers from MSDN subscriptions, Amazon EC2 Windows LI and/or Amazon EC2 Dedicate Instances to run SQL Server Developer Edition.
 
-The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, CloudWatch, EFS, Lambda, and AWS Backup, offering a serverless solution to run SQL Server Developer edition into containers, at the same time, automatically taking care of data persistence, monitoring, backup, and auto-recovery.
+The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, CloudMap, CloudWatch, EFS, Lambda, and AWS Backup, offering a serverless solution to run SQL Server Developer edition into containers, at the same time, automatically taking care of data persistence, monitoring, log management, backup, and auto-recovery.
 
 
 - [How to deploy the solution](#how-to-deploy-the-solution)
