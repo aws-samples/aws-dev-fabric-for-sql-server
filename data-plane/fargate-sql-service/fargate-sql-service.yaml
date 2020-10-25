@@ -396,7 +396,7 @@ Resources:
   ###
   ## Scheduled scaling
   #
-  TestingServiceAutoScalingTarget:
+  OfficeHoursAutoScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: Service
     Condition: EnableOfficeHours

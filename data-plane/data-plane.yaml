@@ -35,11 +35,17 @@ Metadata:
       MSSQLCOLLATION:
         default: "Collation and Unicode support"
 
+      OfficeHours:
+        default: "Enable / Disable"
+
+      OfficeHoursActive:
+        default: "Select a weekly schedule"
+
       OfficeHoursStart:
-        default: "This value must be in UTC and 24HR format"
+        default: "Time to start (UTC)"
 
       OfficeHoursStop:
-        default: "This value must be in UTC and 24HR format"
+        default: "Time to stop (UTC)"
 
     ParameterGroups:
       -
@@ -161,7 +167,7 @@ Parameters:
   OfficeHours:
     Type: String
     Description: >
-      Choose if you want to enable scheduled on/off
+      Choose if you want to enable scheduled on / off
     Default: No
     AllowedValues:
       - Yes
@@ -170,7 +176,7 @@ Parameters:
   OfficeHoursActive:
     Type: String
     Description: >
-      Select the week schedule
+      Select whether the schedule will be enabled for the whole week or only on business days
     Default: Everyday
     AllowedValues:
       - Everyday
@@ -179,21 +185,119 @@ Parameters:
   OfficeHoursStart:
     Type: String
     Description: >
-      Time to start (UTC)
-    Default: 9
-    AllowedPattern: ^\d{1}$|^[1]{1}\d{1}$|^[2]{1}[0-4]{1}$
+      This value must be in UTC
+    Default: 9-AM
+    AllowedValues:
+      - 12-Midnight
+      - 1-AM
+      - 2-AM
+      - 3-AM
+      - 4-AM
+      - 6-AM
+      - 7-AM
+      - 8-AM
+      - 9-AM
+      - 10-AM
+      - 11-AM
+      - 12-Noon
+      - 1-PM
+      - 2-PM
+      - 3-PM
+      - 4-PM
+      - 5-PM
+      - 6-PM
+      - 7-PM
+      - 8-PM
+      - 9-PM
+      - 10-PM
+      - 11-PM
 
   OfficeHoursStop:
     Type: String
     Description: >
-      Time to stop (UTC)
-    Default: 18
-    AllowedPattern: ^\d{1}$|^[1]{1}\d{1}$|^[2]{1}[0-4]{1}$
+      This value must be in UTC
+    Default: 6-PM
+    AllowedValues:
+      - 12-Midnight
+      - 1-AM
+      - 2-AM
+      - 3-AM
+      - 4-AM
+      - 6-AM
+      - 7-AM
+      - 8-AM
+      - 9-AM
+      - 10-AM
+      - 11-AM
+      - 12-Noon
+      - 1-PM
+      - 2-PM
+      - 3-PM
+      - 4-PM
+      - 5-PM
+      - 6-PM
+      - 7-PM
+      - 8-PM
+      - 9-PM
+      - 10-PM
+      - 11-PM
 
   MSSQLCOLLATION:
     Type: String
     Default: SQL_Latin1_General_CP1_CI_AS
     Description: SQL Server collation setting
+
+
+Mappings:
+  24hTimeMap:
+    12-Midnight:
+      24h: '0'
+    1-AM:
+      24h: '1'
+    2-AM:
+      24h: '2'
+    3-AM:
+      24h: '3'
+    4-AM:
+      24h: '4'
+    5-AM:
+      24h: '5'
+    6-AM:
+      24h: '6'
+    7-AM:
+      24h: '7'
+    8-AM:
+      24h: '8'
+    9-AM:
+      24h: '9'
+    10-AM:
+      24h: '10'
+    11-AM:
+      24h: '11'
+    12-Noon:
+      24h: '12'
+    1-PM:
+      24h: '13'
+    2-PM:
+      24h: '14'
+    3-PM:
+      24h: '15'
+    4-PM:
+      24h: '16'
+    5-PM:
+      24h: '17'
+    6-PM:
+      24h: '18'
+    7-PM:
+      24h: '19'
+    8-PM:
+      24h: '20'
+    9-PM:
+      24h: '21'
+    10-PM:
+      24h: '22'
+    11-PM:
+      24h: '23'
 
 
 Resources:
@@ -233,5 +337,11 @@ Resources:
         OfficeHours: !Ref OfficeHours
         OfficeHoursActive:
           !If [EverydayCondition, '?', 'MON-FRI']
-        OfficeHoursStart: !Ref OfficeHoursStart
-        OfficeHoursStop: !Ref OfficeHoursStop
+        OfficeHoursStart: !FindInMap
+          - 24hTimeMap
+          - !Ref OfficeHoursStart
+          - 24h
+        OfficeHoursStop: !FindInMap
+          - 24hTimeMap
+          - !Ref OfficeHoursStop
+          - '24h'
