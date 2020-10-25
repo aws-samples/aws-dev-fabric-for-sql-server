@@ -35,6 +35,12 @@ Metadata:
       MSSQLCOLLATION:
         default: "Collation and Unicode support"
 
+      OfficeHoursStart:
+        default: "This value must be in UTC and 24HR format"
+
+      OfficeHoursStop:
+        default: "This value must be in UTC and 24HR format"
+
     ParameterGroups:
       -
         Label:
@@ -52,11 +58,20 @@ Metadata:
           - TaskMemory
           - UseSpot
           - MSSQLCOLLATION
+      -
+        Label:
+          default: "Office hours ..."
+        Parameters:
+          - OfficeHours
+          - OfficeHoursActive
+          - OfficeHoursStart
+          - OfficeHoursStop
 
 
 Conditions:
 
   EnableSpot: !Equals [!Ref UseSpot, 'true']
+  EverydayCondition: !Equals [!Ref OfficeHoursActive, 'Everyday']
 
 
 Parameters:
@@ -143,6 +158,38 @@ Parameters:
       - Yes
       - No
 
+  OfficeHours:
+    Type: String
+    Description: >
+      Choose if you want to enable scheduled on/off
+    Default: No
+    AllowedValues:
+      - Yes
+      - No
+
+  OfficeHoursActive:
+    Type: String
+    Description: >
+      Select the week schedule
+    Default: Everyday
+    AllowedValues:
+      - Everyday
+      - Monday-to-Friday
+
+  OfficeHoursStart:
+    Type: String
+    Description: >
+      Time to start (UTC)
+    Default: 9
+    AllowedPattern: ^\d{1}$|^[1]{1}\d{1}$|^[2]{1}[0-4]{1}$
+
+  OfficeHoursStop:
+    Type: String
+    Description: >
+      Time to stop (UTC)
+    Default: 18
+    AllowedPattern: ^\d{1}$|^[1]{1}\d{1}$|^[2]{1}[0-4]{1}$
+
   MSSQLCOLLATION:
     Type: String
     Default: SQL_Latin1_General_CP1_CI_AS
@@ -183,3 +230,8 @@ Resources:
         TaskCPU: !Ref TaskCPU
         TaskMemory: !Ref TaskMemory
         MSSQLCOLLATION: !Ref MSSQLCOLLATION
+        OfficeHours: !Ref OfficeHours
+        OfficeHoursActive:
+          !If [EverydayCondition, '?', 'MON-FRI']
+        OfficeHoursStart: !Ref OfficeHoursStart
+        OfficeHoursStop: !Ref OfficeHoursStop
