@@ -404,7 +404,7 @@ Resources:
       MaxCapacity: 1
       MinCapacity: 0
       ResourceId: !Sub service/${ClusterName}/${Service.Name}
-      RoleARN: !Sub arn:aws:iam:${AWS::Region}:${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
       ScheduledActions:

@@ -307,7 +307,7 @@ Resources:
     Properties:
       BackupPlanId: !Ref FileSystemBackupPlan
       BackupSelection:
-        IamRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/AWSBackupDefaultServiceRole
+        IamRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/backup.amazonaws.com/AWSServiceRoleForBackup
         Resources:
           - !Sub arn:aws:elasticfilesystem:${AWS::Region}:${AWS::AccountId}:file-system/${EFS}
         SelectionName: !Sub efs-${EFS}-backup
