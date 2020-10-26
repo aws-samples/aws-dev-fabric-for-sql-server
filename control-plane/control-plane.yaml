@@ -183,14 +183,6 @@ Resources:
           CapacityProvider: FARGATE_SPOT
           Weight: 1
 
-  TransformStack:
-    Type: AWS::CloudFormation::Stack
-    DependsOn: [ SubnetChecker ]
-    Properties:
-      TemplateURL: macro-transformer/macro-transformer.yaml
-      Parameters:
-        LambdaRuntime: !Ref LambdaRuntime
-
   StorageManagerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
