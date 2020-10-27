@@ -238,7 +238,7 @@ Resources:
         Path: !Sub '/${SRVPrefix}/backup'
 
   ###
-  ## EFS Backup Access point
+  ## EFS Data Access point
   #
   DataAcessPoint:
     Type: AWS::EFS::AccessPoint
@@ -269,9 +269,11 @@ Resources:
       ServiceName: !Sub ${SRVPrefix}-service
       Cluster: !Ref ClusterName
       PlatformVersion: !Ref PlatformVersion
+      DeploymentController:
+        Type: ECS
       DeploymentConfiguration:
-        MaximumPercent: 200
-        MinimumHealthyPercent: 100
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
       DesiredCount: !Ref 'DesiredCount'
       NetworkConfiguration:
         AwsvpcConfiguration:
