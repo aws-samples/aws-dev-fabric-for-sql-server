@@ -233,9 +233,90 @@ Resources:
          Version: '2012-10-17'
        PolicyName: !Sub ${AWS::StackName}-SubetChecker-sub
 
+  ###
+  ## Id Generator Function
+  #
+  IdGeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: !Ref LambdaRuntime
+      Timeout: 360
+      Role: !GetAtt IdGeneratorFunctionExecutionRole.Arn
+      InlineCode: |
+        import boto3
+        import cfnresponse
+
+        def handler(event, context):
+
+            try:
+
+                the_event = event['RequestType']
+                response_data = {}
+                phy_res_id = str(hash(event['StackId']
+                                      + event['LogicalResourceId']))[1:]
+
+                print("Event dump: %s" % str(event))
+                print("Request type: ", str(the_event))
+
+                if the_event in ('Create', 'Update'):
+
+                    unique_id = str(hash(event['StackId']))[1:11]
+                    print("Unique ID: %s ." % unique_id)
+                    response_data['unique_id'] = unique_id
+
+                print("Execution successful!")
+                cfnresponse.send(event,
+                                 context,
+                                 cfnresponse.SUCCESS,
+                                 response_data,
+                                 physicalResourceId=phy_res_id)
+
+            except Exception as e:
+
+                print("Execution failed...")
+                e_string = str(e)
+                print(e_string)
+                context.log_stream_name = e_string
+                cfnresponse.send(event,
+                                 context,
+                                 cfnresponse.FAILED,
+                                 response_data,
+                                 physicalResourceId=phy_res_id)
+
+
+  IdGeneratorFunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+     AssumeRolePolicyDocument:
+       Statement:
+       - Action:
+         - sts:AssumeRole
+         Effect: Allow
+         Principal:
+           Service:
+           - lambda.amazonaws.com
+       Version: '2012-10-17'
+     Path: "/"
+     Policies:
+     - PolicyDocument:
+         Statement:
+         - Action:
+           - logs:CreateLogGroup
+           - logs:CreateLogStream
+           - logs:PutLogEvents
+           Effect: Allow
+           Resource: arn:aws:logs:*:*:*
+         Version: '2012-10-17'
+       PolicyName: !Sub ${AWS::StackName}-IdGenerator-sub-CW
+
 
 Outputs:
 
   SubnetChecker:
-    Description: 'EFS Injector Service Token.'
+    Description: 'Subnet Checker Service Token.'
     Value: !GetAtt SubnetCheckerFunction.Arn
+
+  IdGenerator:
+    Description: 'ID generator Service Token.'
+    Value: !GetAtt IdGeneratorFunction.Arn

@@ -95,7 +95,9 @@ def update_placeholder(resource_structure, iteration):
         print("Found {} occurrences of string placeholder in JSON, replacing with iterator value {}".format(place_holder_count, iteration))
 
         # Generate a random string for replacement
-        replacement_values = ''.join(choice(ascii_lowercase) for i in range(10))
+        #replacement_values = ''.join(choice(ascii_lowercase) for i in range(10))
+        # For now... replacing with the iteration count
+        replacement_values = str(iteration)
 
         # Replace the placeholders
         resource_string = resource_string % (replacement_values)

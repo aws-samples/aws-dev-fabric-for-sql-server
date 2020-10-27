@@ -365,3 +365,9 @@ Outputs:
     Value: !Ref ECSCluster
     Export:
       Name: !Sub ${ClusterName}::TheECSCluster
+
+  IdGeneratorServiceToken:
+    Description: 'ECS Cluster name.'
+    Value: !GetAtt CustomResourcesStack.Outputs.IdGenerator
+    Export:
+      Name: !Sub ${ClusterName}::IdGeneratorServiceToken

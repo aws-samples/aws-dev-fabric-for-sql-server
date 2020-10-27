@@ -320,7 +320,7 @@ Resources:
         SubnetsPrivate:
           Fn::ImportValue:
             !Sub '${ClusterName}::SubnetsPrivate'
-        SRVPrefix: db-%s
+        SRVPrefix: !Sub db-${IdGenerator.unique_id}-%s
         ServiceDiscoveryNamespace:
           Fn::ImportValue:
             !Sub '${ClusterName}::ServiceDiscoveryNamespace'
@@ -344,3 +344,10 @@ Resources:
           - 24hTimeMap
           - !Ref OfficeHoursStop
           - '24h'
+
+  IdGenerator:
+    Type: Custom::IdGenerator
+    Properties:
+      ServiceToken:
+        Fn::ImportValue:
+          !Sub '${ClusterName}::IdGeneratorServiceToken'

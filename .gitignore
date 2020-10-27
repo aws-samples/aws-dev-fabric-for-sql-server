@@ -4,6 +4,7 @@
 
 # Standard files
 **/.DS_Store
+**/.ropeproject
 
 # Ignore packaged templates
 **/packaged-*
