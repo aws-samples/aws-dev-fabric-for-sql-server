@@ -76,7 +76,6 @@ Metadata:
 
 Conditions:
 
-  EnableSpot: !Equals [!Ref UseSpot, 'true']
   EverydayCondition: !Equals [!Ref OfficeHoursActive, 'Everyday']
 
 
@@ -304,14 +303,14 @@ Resources:
 
   ServiceStack:
     Type: AWS::CloudFormation::Stack
-    Count: !Ref DBInstancesCount
+    #Count: !Ref DBInstancesCount
     Properties:
       TemplateURL: fargate-sql-service/fargate-sql-service.yaml
       Parameters:
-        ClusterName: !If
-          - EnableSpot
-          - Fn::ImportValue: !Sub '${ClusterName}::TheECSClusterSpot'
-          - Fn::ImportValue: !Sub '${ClusterName}::TheECSCluster'
+        UseSpot: !Ref UseSpot
+        ClusterName:
+          Fn::ImportValue:
+            !Sub '${ClusterName}::TheECSCluster'
         TheVPCID:
           Fn::ImportValue:
             !Sub '${ClusterName}::TheVPCID'

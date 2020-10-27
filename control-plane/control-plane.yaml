@@ -163,24 +163,10 @@ Resources:
           Value: enabled
       CapacityProviders:
         - FARGATE
-      DefaultCapacityProviderStrategy:
-        - Base: 0
-          CapacityProvider: FARGATE
-          Weight: 1
-
-  ECSClusterSpot:
-    Type: AWS::ECS::Cluster
-    DependsOn: [ SubnetChecker ]
-    Properties:
-      ClusterName: !Sub ${ClusterName}-spot
-      ClusterSettings:
-        - Name: containerInsights
-          Value: enabled
-      CapacityProviders:
         - FARGATE_SPOT
       DefaultCapacityProviderStrategy:
         - Base: 0
-          CapacityProvider: FARGATE_SPOT
+          CapacityProvider: FARGATE
           Weight: 1
 
   StorageManagerStack:
@@ -379,9 +365,3 @@ Outputs:
     Value: !Ref ECSCluster
     Export:
       Name: !Sub ${ClusterName}::TheECSCluster
-
-  TheECSClusterSpot:
-    Description: 'ECS Spot Cluster name.'
-    Value: !Ref ECSClusterSpot
-    Export:
-      Name: !Sub ${ClusterName}::TheECSClusterSpot

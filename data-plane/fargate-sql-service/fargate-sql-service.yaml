@@ -4,10 +4,20 @@ Description: Deploy SQL SERVER DB services
 
 Conditions:
 
+  EnableSpot: !Equals [!Ref UseSpot, 'true']
   EnableOfficeHours: !Equals [!Ref OfficeHours, 'true']
 
 
 Parameters:
+
+  UseSpot:
+    Type: String
+    Description: >
+      Choose if you want to use Fargate Spot technology
+    Default: No
+    AllowedValues:
+      - Yes
+      - No
 
   ClusterName:
     Type: String
@@ -250,6 +260,10 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
+      CapacityProviderStrategy: !If
+        - EnableSpot
+        - - CapacityProvider: FARGATE_SPOT
+        - - CapacityProvider: FARGATE
       ServiceName: !Sub ${SRVPrefix}-service
       Cluster: !Ref ClusterName
       PlatformVersion: !Ref PlatformVersion
