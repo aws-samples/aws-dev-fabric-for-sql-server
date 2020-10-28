@@ -104,7 +104,7 @@ def handler(event, context):
 
             print("CIDR is: %s" % response_data['vpc_cidr'])
 
-        print("Execution succesfull!")
+        print("Execution successful!")
         cfnresponse.send(event,
                          context,
                          cfnresponse.SUCCESS,

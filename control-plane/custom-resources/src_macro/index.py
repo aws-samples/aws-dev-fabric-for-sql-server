@@ -92,10 +92,12 @@ def update_placeholder(resource_structure, iteration):
     # If the placeholder is found then replace it
     if place_holder_count > 0:
 
-        print("Found {} occurrences of string placeholder in JSON, replacing with iterator value {}".format(place_holder_count, iteration))
+        print("Found {} occurrences of string placeholder in JSON, replacing with iterator value {}".format(place_holder_count, iteration + 1))
 
         # Generate a random string for replacement
-        replacement_values = ''.join(choice(ascii_lowercase) for i in range(10))
+        #replacement_values = ''.join(choice(ascii_lowercase) for i in range(10))
+        # For now... replacing with the iteration count
+        replacement_values = str(iteration)
 
         # Replace the placeholders
         resource_string = resource_string % (replacement_values)
@@ -130,15 +132,19 @@ def multiply(resource_name, resource_structure, count):
     resources = {}
     # Loop according to the number of times we want to
     # multiply, creating a new resource each time
-    for iteration in range(1, (count + 1)):
-        print("Multiplying '{}', iteration count {}".format(resource_name,iteration))
-        multipliedResourceStructure = update_placeholder(resource_structure,iteration)
+    for iteration in range(0, count):
+        print("Multiplying '{}', iteration count {}"
+              .format(resource_name, iteration + 1))
+        multipliedResourceStructure = update_placeholder(
+            resource_structure,
+            iteration)
         resources[resource_name+str(iteration)] = multipliedResourceStructure
     return resources
 
 
 def handler(event, context):
-    result = process_template(event['fragment'],event['templateParameterValues'])
+    result = process_template(event['fragment'],
+                              event['templateParameterValues'])
     return {
         'requestId': event['requestId'],
         'status': result[0],

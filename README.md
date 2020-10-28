@@ -2,7 +2,7 @@
 
 Microsoft made changes to the MSDN license terms that prohibit BYOL of MSDN subscriptions effective after 10/2019.  The good news is that SQL Server Developer Edition is now a free download independent of MSDN, which can be deployed on shared and dedicated tenant AWS environments.  While many customers may use MSDN to cover Windows Server licensing on premises, they must have a Windows Server License to run the database on AWS due to the inability to bring MSDN licenses.
 
-At AWS, we offer customers the option to run SQL Server Developer Edition on Amazon EC2 instances based on Linux OS, which helps customers move away from MSDN for Windows Server licenses. However, this still requires DBAs to have the necessary skills to operate a Linux OS. The AWS Dev Fabric for SQL Server allows customers to keep their SQL Server within a development environment running on AWS, while removing the need for customers to subscribe to MSDN and license Windows Server on Amazon EC2 to run SQL Server Developer Edition. 
+At AWS, we offer customers the option to run SQL Server Developer Edition on Amazon EC2 instances based on Linux OS, which helps customers move away from MSDN for Windows Server licenses. However, this still requires DBAs to have the necessary skills to operate a Linux OS. The AWS Dev Fabric for SQL Server allows customers to keep their SQL Server within a development environment running on AWS, while removing the need for customers to subscribe to MSDN and license Windows Server on Amazon EC2 to run SQL Server Developer Edition.
 
 The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, CloudMap, CloudWatch, EFS, Lambda, and AWS Backup, offering a serverless solution to run SQL Server Developer edition into containers, at the same time, automatically taking care of data persistence, monitoring, log management, backup, and auto-recovery.
 
@@ -12,6 +12,7 @@ The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, C
   - [Data plane](#data-plane)
 - [Architecture](#architecture)
 - [Contributing to the project](#contributing-to-the-project)
+- [Changelog](#changelog)
 - [License](#license)
 
 #### Security disclosures
@@ -127,6 +128,11 @@ You can later deploy new and different instances of the Data Plane, specifying d
 Contributions and feedback are welcome! Proposals and pull requests will be considered and responded. For more information, see the [CONTRIBUTING](https://github.com/aws-samples/aws-dev-fabric-for-sql-server/blob/master/CONTRIBUTING.md) file.
 
 Amazon Web Services does not currently provide support for modified copies of this software.
+
+
+## Changelog
+
+Refer to the [Changelog section](./CHANGELOG.md).
 
 
 ## License

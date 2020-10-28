@@ -29,6 +29,9 @@ Metadata:
       StorageManagerDockerImage:
         default: "Storage Manager image"
 
+      EnableBackups:
+        default: "Enable / Disable EFS Backups"
+
     ParameterGroups:
       -
         Label:
@@ -37,6 +40,7 @@ Metadata:
           - ClusterName
           - RootDNSName
           - LambdaRuntime
+          - EnableBackups
       -
         Label:
           default: "Networking settings ..."
@@ -100,8 +104,19 @@ Parameters:
     Default: coderaiser/cloudcmd:14.3.10-alpine
     Description: The url of a docker image
 
+  EnableBackups:
+    Type: String
+    Description: >
+      Choose if you want to enable EFS backups
+    Default: No
+    AllowedValues:
+      - Yes
+      - No
+
 
 Conditions:
+
+  ConditionBackups: !Equals [!Ref EnableBackups, 'true']
 
   CreateMountTarget0:  !Or
     - !Equals [!Ref SelectedPrivateSubnetsCont, 1]
@@ -148,33 +163,11 @@ Resources:
           Value: enabled
       CapacityProviders:
         - FARGATE
+        - FARGATE_SPOT
       DefaultCapacityProviderStrategy:
         - Base: 0
           CapacityProvider: FARGATE
           Weight: 1
-
-  ECSClusterSpot:
-    Type: AWS::ECS::Cluster
-    DependsOn: [ SubnetChecker ]
-    Properties:
-      ClusterName: !Sub ${ClusterName}-spot
-      ClusterSettings:
-        - Name: containerInsights
-          Value: enabled
-      CapacityProviders:
-        - FARGATE_SPOT
-      DefaultCapacityProviderStrategy:
-        - Base: 0
-          CapacityProvider: FARGATE_SPOT
-          Weight: 1
-
-  TransformStack:
-    Type: AWS::CloudFormation::Stack
-    DependsOn: [ SubnetChecker ]
-    Properties:
-      TemplateURL: macro-transformer/macro-transformer.yaml
-      Parameters:
-        LambdaRuntime: !Ref LambdaRuntime
 
   StorageManagerStack:
     Type: AWS::CloudFormation::Stack
@@ -257,6 +250,7 @@ Resources:
 
   FileSystemBackupVault:
     Type: AWS::Backup::BackupVault
+    Condition: ConditionBackups
     DeletionPolicy: Retain
     Properties:
       BackupVaultName: !Sub efs-${EFS}-backup
@@ -275,6 +269,7 @@ Resources:
 
   FileSystemBackupPlan:
     Type: AWS::Backup::BackupPlan
+    Condition: ConditionBackups
     Properties:
       BackupPlan:
         BackupPlanName: !Sub ${EFS}-Daily-Weekly-Monthly
@@ -304,13 +299,31 @@ Resources:
 
   FileSystemBackupSelection:
     Type: AWS::Backup::BackupSelection
+    Condition: ConditionBackups
     Properties:
       BackupPlanId: !Ref FileSystemBackupPlan
       BackupSelection:
-        IamRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/AWSBackupDefaultServiceRole
+        IamRoleArn: !GetAtt AWSBackupRole.Arn
         Resources:
           - !Sub arn:aws:elasticfilesystem:${AWS::Region}:${AWS::AccountId}:file-system/${EFS}
         SelectionName: !Sub efs-${EFS}-backup
+
+  AWSBackupRole:
+    Type: AWS::IAM::Role
+    Condition: ConditionBackups
+    Properties:
+     AssumeRolePolicyDocument:
+       Statement:
+       - Action:
+         - sts:AssumeRole
+         Effect: Allow
+         Principal:
+           Service:
+           - backup.amazonaws.com
+       Version: '2012-10-17'
+     Path: "/"
+     ManagedPolicyArns:
+       - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup
 
 
 Outputs:
@@ -353,8 +366,8 @@ Outputs:
     Export:
       Name: !Sub ${ClusterName}::TheECSCluster
 
-  TheECSClusterSpot:
-    Description: 'ECS Spot Cluster name.'
-    Value: !Ref ECSClusterSpot
+  IdGeneratorServiceToken:
+    Description: 'Id Generator Service Token.'
+    Value: !GetAtt CustomResourcesStack.Outputs.IdGenerator
     Export:
-      Name: !Sub ${ClusterName}::TheECSClusterSpot
+      Name: !Sub ${ClusterName}::IdGeneratorServiceToken

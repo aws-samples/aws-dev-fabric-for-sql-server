@@ -2,10 +2,22 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploy SQL SERVER DB services
 
 
-###
-## Parameters
-#
+Conditions:
+
+  EnableSpot: !Equals [!Ref UseSpot, 'true']
+  EnableOfficeHours: !Equals [!Ref OfficeHours, 'true']
+
+
 Parameters:
+
+  UseSpot:
+    Type: String
+    Description: >
+      Choose if you want to use Fargate Spot technology
+    Default: No
+    AllowedValues:
+      - Yes
+      - No
 
   ClusterName:
     Type: String
@@ -77,6 +89,38 @@ Parameters:
     Type: String
     Default: '0.0.0.0/0'
     Description: Default access rule for the services
+
+  OfficeHours:
+    Type: String
+    Description: >
+      Choose if you want to enable scheduled on / off
+    Default: No
+    AllowedValues:
+      - Yes
+      - No
+
+  OfficeHoursActive:
+    Type: String
+    Description: >
+      Active schedule
+    Default: '?'
+    AllowedValues:
+      - '?'
+      - MON-FRI
+
+  OfficeHoursStart:
+    Type: String
+    Description: >
+      Time to start (UTC)
+    Default: 9
+    AllowedPattern: ^\d{1}$|^[1]{1}\d{1}$|^[2]{1}[0-4]{1}$
+
+  OfficeHoursStop:
+    Type: String
+    Description: >
+      Time to stop (UTC)
+    Default: 18
+    AllowedPattern: ^\d{1}$|^[1]{1}\d{1}$|^[2]{1}[0-4]{1}$
 
 
 Resources:
@@ -194,7 +238,7 @@ Resources:
         Path: !Sub '/${SRVPrefix}/backup'
 
   ###
-  ## EFS Backup Access point
+  ## EFS Data Access point
   #
   DataAcessPoint:
     Type: AWS::EFS::AccessPoint
@@ -216,12 +260,20 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
+      CapacityProviderStrategy: !If
+        - EnableSpot
+        - - CapacityProvider: FARGATE_SPOT
+            Weight: 1
+        - - CapacityProvider: FARGATE
+            Weight: 1
       ServiceName: !Sub ${SRVPrefix}-service
       Cluster: !Ref ClusterName
       PlatformVersion: !Ref PlatformVersion
+      DeploymentController:
+        Type: ECS
       DeploymentConfiguration:
-        MaximumPercent: 200
-        MinimumHealthyPercent: 100
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
       DesiredCount: !Ref 'DesiredCount'
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -358,3 +410,29 @@ Resources:
         FailureThreshold: 1
       Name: !Sub ${SRVPrefix}
       NamespaceId: !Ref ServiceDiscoveryNamespace
+
+  ###
+  ## Scheduled scaling
+  #
+  OfficeHoursAutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: Service
+    Condition: EnableOfficeHours
+    Properties:
+      MaxCapacity: 1
+      MinCapacity: 0
+      ResourceId: !Sub service/${ClusterName}/${Service.Name}
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      ScheduledActions:
+        - ScheduledActionName: Turn On
+          ScalableTargetAction:
+            MaxCapacity: 1
+            MinCapacity: 1
+          Schedule: !Sub cron(0 ${OfficeHoursStart} * * ${OfficeHoursActive} *)
+        - ScheduledActionName: Turn Off
+          ScalableTargetAction:
+            MaxCapacity: 0
+            MinCapacity: 0
+          Schedule: !Sub cron(0 ${OfficeHoursStop} * * ${OfficeHoursActive} *)
