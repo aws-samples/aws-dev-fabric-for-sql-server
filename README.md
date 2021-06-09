@@ -6,7 +6,7 @@ At AWS, we offer customers the option to run SQL Server Developer Edition on Ama
 
 The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, CloudMap, CloudWatch, EFS, Lambda, and AWS Backup, offering a serverless solution for running SQL Server Developer edition into containers, at the same time, automatically taking care of data persistence, monitoring, log management, backup and auto-recovery.
 
-- [What does the solution offer ?](#what-does-the-solution-offer-?)
+- [What does the solution offer ?](#what-does-the-solution-offer-)
 - [How to deploy the solution](#how-to-deploy-the-solution)
   - [Control plane](#control-plane)
   - [Data plane](#data-plane)
