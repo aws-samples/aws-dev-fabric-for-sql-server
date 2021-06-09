@@ -6,7 +6,7 @@ At AWS, we offer customers the option to run SQL Server Developer Edition on Ama
 
 The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, CloudMap, CloudWatch, EFS, Lambda, and AWS Backup, offering a serverless solution for running SQL Server Developer edition into containers, at the same time, automatically taking care of data persistence, monitoring, log management, backup and auto-recovery.
 
-- [What does the solution offer?](#what-does-the-solution-offer-?)
+- [What does the solution offer ?](#what-does-the-solution-offer-?)
 - [How to deploy the solution](#how-to-deploy-the-solution)
   - [Control plane](#control-plane)
   - [Data plane](#data-plane)
@@ -21,13 +21,13 @@ The AWS Dev Fabric for SQL Server orchestrates AWS services like Fargate, ECS, C
 
 If you think you’ve found a potential security issue, please do not post it in the Issues.  Instead, please follow the instructions [here](https://aws.amazon.com/security/vulnerability-reporting/) or email AWS security directly at [aws-security@amazon.com](mailto:aws-security@amazon.com).
 
-## What does the solution offer?
+## What does the solution offer ?
 
 It allows you to deploy and create [ECS Fargate containers](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html) using [Microsoft SQL Server Images](https://hub.docker.com/_/microsoft-mssql-server). This will easily and seamlessly provision serverless Microsoft SQL instances for development environments. You can fine control the Network settings (VPC and subnets), SQL Instance configuration (RAM, CPU Cores, etc) and the specific Image version you would like to use.
 
 You can launch any number of SQL Instances you require in minutes. Each Database will have its own unique endpoint, password and storage allocation.
 
-In order to leverage security, the Security Groups are configured to only allow the minimum required traffic. Also, the deployment explicitly validates that the selected subnets are [private](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html). As a best practice, Database servers should not be accessible publicly over the internet. In any case, please always double check and ensure that private subnets are selected.
+In order to improve security, the Security Groups are configured to only allow the minimum required traffic. Also, the deployment explicitly validates that the selected subnets are [private](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html). As a best practice, Database servers should not be accessible publicly over the internet. In any case, please always double check and ensure that private subnets are selected.
 
 As the solution is designed for development workloads, it leverages options for minimising costs:
 - You can opt-in for running the SQL Instances in [Fargate Spot](https://aws.amazon.com/blogs/aws/aws-fargate-spot-now-generally-available/). This can significantly reduce the operational costs.
